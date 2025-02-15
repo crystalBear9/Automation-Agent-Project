@@ -1,0 +1,10 @@
+From: john.doe@example.com
+To: jane.doe@example.com
+Subject: Meeting Reminder
+
+Dear Jane,
+
+Just a quick reminder about the meeting tomorrow.
+
+Best regards,
+John

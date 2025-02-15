@@ -1,0 +1,33 @@
+import sqlite3
+
+# Connect to SQLite database
+conn = sqlite3.connect('/data/ticket-sales.db')
+cursor = conn.cursor()
+
+# Create the tickets table
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS tickets (
+    id INTEGER PRIMARY KEY,
+    type TEXT,
+    units INTEGER,
+    price REAL
+)
+''')
+
+# Insert sample data into the tickets table
+cursor.executemany('''
+INSERT INTO tickets (type, units, price)
+VALUES (?, ?, ?)
+''', [
+    ('Gold', 10, 100.0),
+    ('Gold', 5, 100.0),
+    ('Silver', 20, 50.0),
+    ('Bronze', 15, 30.0),
+    ('Gold', 3, 100.0)
+])
+
+# Commit and close the connection
+conn.commit()
+conn.close()
+
+print("ticket-sales.db has been created successfully!")
