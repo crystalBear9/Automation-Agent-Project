@@ -1,38 +1,42 @@
 import os
 import subprocess
 import json
+import flask
 from flask import Flask, request, jsonify
 from datetime import datetime
 import re
 import numpy as np
 import sqlite3
-
-
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
-@app.route('/')
+
+@app.route('/' , methods = ['GET' , 'POST'])
 def hello_world():
-    return 'Hello, World!'
+    if request.method == 'GET':
+        return 'Hello, World!'
+    else:
+        return 'postinggg.. '
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8000)
 
 # This endpoint will handle all tasks.
-@app.route('/run', methods=['POST'])
+@app.route('/run', methods=['GET', 'POST'])
 def run_task():
-    task_description = request.args.get('task')
-    
-    try:
-        # Process task description and execute the corresponding logic
-        task_result = process_task(task_description)
+    if request.method == 'POST':
+        task_description = request.json.get('task')
         
-        if task_result['status'] == 'success':
-            return jsonify({"message": "Task executed successfully"}), 200
-        else:
-            return jsonify({"error": task_result['error']}), 400
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        try:
+            # Process task description and execute the corresponding logic
+            task_result = process_task(task_description)
+            
+            if task_result['status'] == 'success':
+                return jsonify({"message": "Task executed successfully"}), 200
+            else:
+                return jsonify({"error": task_result['error']}), 400
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
 
 
 # This endpoint reads a file for verification.
@@ -139,16 +143,16 @@ def install_and_run_datagen(user_email):
 
 #Task A2: Format the contents of /data/format.md using prettier
 
-def format_markdown_file():
+def format_markdown_file(task_description):
     # Step 1: Run Prettier on /data/format.md to format it
-    subprocess.run(['npx', 'prettier', '--write', '/data/format.md'], check=True)
+    subprocess.run(['npx', 'prettier', '--write', './docs.md'], check=True)
     return {'status': 'success'}
 
 
 #Task A3: Count specific weekday in /data/dates.txt
 
-def count_wednesdays():
-    with open('/data/dates.txt', 'r') as file:
+def count_wednesdays(task_description):
+    with open('./dates.txt', 'r') as file:
         dates = file.readlines()
     
     wednesday_count = 0
@@ -160,7 +164,7 @@ def count_wednesdays():
         except ValueError:
             continue
     
-    with open('/data/dates-wednesdays.txt', 'w') as file:
+    with open('./dates-wednesdays.txt', 'w') as file:
         file.write(str(wednesday_count))
     
     return {'status': 'success'}
@@ -169,12 +173,12 @@ def count_wednesdays():
 #Task A4: Sort contacts in /data/contacts.json
 
 def sort_contacts():
-    with open('/data/contacts.json', 'r') as f:
+    with open('./contacts.json', 'r') as f:
         contacts = json.load(f)
     
     contacts_sorted = sorted(contacts, key=lambda x: (x['last_name'], x['first_name']))
     
-    with open('/data/contacts-sorted.json', 'w') as f:
+    with open('./contacts-sorted.json', 'w') as f:
         json.dump(contacts_sorted, f, indent=4)
     
     return {'status': 'success'}
@@ -183,17 +187,17 @@ def sort_contacts():
 #Task A5: Write the first line of the 10 most recent .log file
 
 def write_recent_log():
-    log_files = [f for f in os.listdir('/data/logs/') if f.endswith('.log')]
+    log_files = [f for f in os.listdir('./') if f.endswith('.log')]
     log_files.sort(reverse=True)  # Sort files in reverse order (most recent first)
     
     if log_files:
         recent_logs = []
         for log_file in log_files[:10]:
-            with open(f'/data/logs/{log_file}', 'r') as f:
+            with open(f'./{log_file}', 'r') as f:
                 first_line = f.readline()
                 recent_logs.append(first_line)
         
-        with open('/data/logs-recent.txt', 'w') as f:
+        with open('./logs-recent.txt', 'w') as f:
             f.writelines(recent_logs)
         
         return {'status': 'success'}
@@ -223,7 +227,7 @@ def extract_h1_titles():
 #Task A7: Extract the sender’s email address from an email
 
 def extract_sender_email():
-    with open('/data/email.txt', 'r') as file:
+    with open('./email.txt', 'r') as file:
         email_content = file.read()
     
     # Use regex to find the first email address
@@ -231,7 +235,7 @@ def extract_sender_email():
     
     if email_match:
         sender_email = email_match.group(0)
-        with open('/data/email-sender.txt', 'w') as file:
+        with open('./email-sender.txt', 'w') as file:
             file.write(sender_email)
         return {'status': 'success'}
     
@@ -243,10 +247,10 @@ def extract_sender_email():
 def extract_credit_card_number():
     # Normally, you would use an OCR tool or AI to extract the card number
     # Here is a simple stub where we assume the number is visible.
-    with open('/data/credit-card.png', 'rb') as file:
+    with open('./credit-card.png', 'rb') as file:
         # Process the image here (e.g., using OCR models)
         card_number = "1234567890123456"  # Dummy placeholder
-        with open('/data/credit-card.txt', 'w') as out_file:
+        with open('./credit-card.txt', 'w') as out_file:
             out_file.write(card_number.replace(" ", ""))
     
     return {'status': 'success'}
@@ -255,7 +259,7 @@ def extract_credit_card_number():
 #Task A9: Find the most similar pair of comments using embeddings
 
 def find_similar_comments():
-    with open('/data/comments.txt', 'r') as file:
+    with open('./comments.txt', 'r') as file:
         comments = file.readlines()
     
     # Using a simple similarity measure (in production, you'd use embeddings for this)
@@ -270,7 +274,7 @@ def find_similar_comments():
                 most_similar_pair = (comments[i], comments[j])
     
     if most_similar_pair:
-        with open('/data/comments-similar.txt', 'w') as file:
+        with open('./comments-similar.txt', 'w') as file:
             file.write(most_similar_pair[0])
             file.write(most_similar_pair[1])
         
@@ -282,7 +286,7 @@ def find_similar_comments():
 #Task A10: Query the total sales of 'Gold' ticket type in a SQLite database
 
 def calculate_gold_sales():
-    conn = sqlite3.connect('/data/ticket-sales.db')
+    conn = sqlite3.connect('./ticket-sales.db')
     cursor = conn.cursor()
 
     # SQL query to calculate the total sales for 'Gold' tickets
@@ -290,8 +294,12 @@ def calculate_gold_sales():
     result = cursor.fetchone()
 
     total_sales = result[0] if result else 0
-    with open('/data/ticket-sales-gold.txt', 'w') as file:
+    with open('./ticket-sales-gold.txt', 'w') as file:
         file.write(str(total_sales))
     
     return {'status': 'success'}
 
+if __name__ == '__main__':
+    app.debug = True
+    app.run()
+    
